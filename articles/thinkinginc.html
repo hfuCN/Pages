@@ -1,0 +1,456 @@
+<head>
+        <title>Thinking in C</title>
+        <META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=UTF-8">
+        <link href="./style.css" rel=stylesheet>
+        </link>
+</head>
+<body>
+        <h1><div align="center">关于C的思考</div></h1>
+
+        <div align="center"><i>Hu Fu</i></div>
+        <div align="center"><i>May, 2014</i></div><br>
+
+        <br>
+
+        <h2><div align="center">引言</div></h2>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;C语言结合了汇编的所有威力，它的抽象程度碰巧既满足了程序员的要求, 又容易实现。
+        因其独特的灵活性和强大的可移植性，系统程序员和黑客们更是对它钟爱有加。无疑，C语言获得了空前的成功，在某种程度上甚至比<i>UNIX</i>还要成功。
+        然而，“C语言就像一把刻刀，简单，锋利，并且在技师手中非常有用。和任何锋利的工具一样，C会伤到那些不能驾驭它的人。”
+        <b>[8]</b>C语言灵活性的背后，有着很多的要注意和避免的地方，一不小心你就会陷入bug的泥潭。
+        所以也无怪乎只有C语言才有像《The C Puzzle Book》，《Obfuscated C and Other Mysteries》，《C Traps and Pitfalls》之类的书。
+        下面的文章不是对那些书中提到的问题的重复，而是对其它一些细小的地方和部分C库函数进行讨论。
+
+        大部分都会集中到标准C上，参考的标准是<i>ISO C99</i>，一小部分可能会涉及到具体平台。</p>
+
+        <h2>一. <i>sizeof</i>与<i>return</i></h2>
+
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;<i>sizeof</i>不是函数，而是一元操作符，没必要给它后面的表达式加括号。
+        但如果计算的是一种类型的大小，<i>sizeof</i>就需要加一个圆括号，但这不是说它是一个函数。
+        <i>return</i>不是函数，而只是关键字，也不需要圆括号。还要特别注意的是<i>sizeof</i>操作符“返回”的
+        是无符号整数（<i>size_t</i>），如果把它的“返回值”和一个<i>int</i>类型比较，先要把它转化成有符号整数。
+        另外，Unix系统调用<i>read/write</i>的返回类型是<i>ssize_t</i>，而不是<i>size_t</i>。
+        <i>ssize_t</i>代表<i>signed size</i>。</p>
+
+
+
+        <h2>二. 0.0,　0,　'\0' vs <i>NULL</i>，<i>NUL</i></h2>
+
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;<i>NULL</i>表示的是空指针，它和任何非空指针值都不相等。而<i>NUL</i>就是'\0'，
+        表示的是值为0的空字符。虽然0.0, 0, '\0', NULL都是完全由0比特组成,但是它们的长度不同。0.0是双精度，
+        通常是8个字节；'\0'是字符常量，通常只有1个字节；<i>NULL</i>表示空指针，它的长度由系统决定，
+        也就是系统中储存一个内存地址所需的字节数；0表示整数,一般是4个字节。它们的类型不同，
+        在用它们给变量赋值时应该小心，有必要时进行强制转换。
+        注意：C语言不保证<i>char</i>总是8个比特，也有7个或9个比特的字符！
+        虽然没有规定<i>short</i>是16个比特，<i>int</i>是32个比特，但是在目前的所有构架上都是如此。
+        <i>long</i>并不总和<i>int</i>一致，它与机器字长一致，也就是说在32位机上它是4个字节，而在64位机上是8个字节。
+        <i>long long</i>是扩展类型，并不是每个编译器都支持，在32位机上它是8个字节。</p>
+
+        <h2>三. 关于可移植性</h2>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;C语言在可移植性方面设计得非常好，而且又不失高效率，这也是GTK+和Linux Kernel
+        都青睐C的重要原因。但是，用C语言编写的程序并不能保证能“一次编写，到处运行”，即使你使用的是ANSI C。
+        原因很简单，因为C语言的设计初衷是为了编写UNIX方便，难免带点“底层特性”，不同机器上C的实现多少都有些不同。这实在让人不安。</p>
+        <h3>1.大尾（big endian）vs.小尾（little endian）</h3>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;历史上，关于此曾有一场圣战<b>[9]</b>，最终以和平而告终。
+        所谓大尾就是最高有效位（MSB）先被放置，
+        依次再放其它。小尾恰好反过来。比如：数66563，被当做32位int储存时，在大尾和小尾机器上分别如下：
+        <blockquote>
+                <pre>
+                        Address	Big Endian	Little Endian
+
+                        0	00000000	00000011
+
+                        1	00000001	00000100
+
+                        2	00000100	00000001
+
+                        3	00000011	00000000
+                    </pre>
+        </blockquote>
+        IA-32构架是小尾，而其它多数构架是大尾。下面的程序可以测试机器是大尾还是小尾。
+        <blockquote>
+                <pre>
+                        int x = 1;
+
+                        if (*(char *)&x == 1)
+                        /* little endian */
+                        else
+                        /* big endian */
+                        </pre>
+        </blockquote>
+        字节顺序在网络传输中非常重要，因为网络上的机器有不同的字节顺序。
+        为了方便，<i>TCP/IP</i>套接字为整数类型定义了一个统一的网络字节顺序（大尾），也为此提供一套转换函数。所以，
+        要编写可移植的代码，不要假设任何特定的字节顺序。
+        </p>
+        <h3>2.位字段的分配</h3>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;“结构和联合中允许有定义为位字段(<i>bit-field</i>)的成员。位字段可以定义为<i>int</i>,<i>signed int</i>,<i>unsigned int</i>之一，并且可以
+        给出附加的宽度值。”<b>[3]</b>中的程序可以确定你的硬件系统和编译器处理位字段的方式：<br>
+        <blockquote>
+                #include &lt;stdio.h&gt;<br>
+                <br>
+                typedef struct DEMO{<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;unsigned int one:1;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;unsigned int two:3;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;unsigned int three:10;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;unsigned int four:5;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;unsigned int    :2;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;unsigned int five:8;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;unsigned int six:8;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;}demo_type;<br>
+                <br>
+                int main(void){<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;int k;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;unsigned char* bptr;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;demo_type bit={1,5,513,17,129,0x81};<br>
+                <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;printf("\nsizeof demo_type =%u\n",sizeof(demo_type));<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;printf("initial values:bit=%u,%u,%u,%u,%u,%u\n",bit.one,bit.two,bit.three,bit.four,bit.five,bit.six);<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;bptr=(unsigned char *)&bit;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;printf("hex dump of bit: %02x %02x %02x %02x %02x %02x %02x %02x \n",bptr[0],bptr[1],bptr[2],bptr[3],bptr[4],bptr[5],bptr[6],bptr[7]);<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;bit.three=1023;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;printf("\nassign 1023 to bit.three: %u,%u,%u,%u,%u,%u\n",bit.one,bit.two,bit.three,bit.four,bit.five,bit.six);<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;k=bit.two;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;printf("assign bit.two to k:k=%i\n",k);<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;return 0;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+        </blockquote>
+        在<i>IA-32 GCC4.1.0</i>上运行结果如下:<br>
+        <blockquote>
+                sizeof demo_type =8<br>
+                initial values:bit=1,5,513,17,129,129<br>
+                hex dump of bit: 1b 60 24 10 81 00 00 00<br>
+                assign 1023 to bit.three: 1,5,1023,17,129,129<br>
+                assign bit.two to k:k=5<br>
+        </blockquote>
+        如上所示，<i>GCC</i>编译器给位字段分配内存时仍以字节为单位分配，所以分配了8个字节。
+        在储存位字段时，编译器是从右向左分配的，这当然会因机器不同而异。C语言中，关于编译器如何安排位字段的规定很少。
+        确实存在某些种类的分配单元，而且分配单元大小也取决于编译器，但编译器可以从高位或低位开始分配位字段。
+        要编写可移植的程序，不要假设位字段是怎样分配的。<br>
+        </p>
+        <h3>3.内存对齐</h3>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;
+        大多数情况下，你不必去关注内存对齐，因为编译器已经为我们做好了。但是，如果你在编写编译器，对齐问题就是你关注的主要问题之一了。
+        因为对齐具有明显的优点──提高了内存访问速度，虽然有时会浪费一些空间。而且，有的RISC体系上要求严格对齐，
+        否则就会触发异常，这对内核程序员非常重要。即使在Intel这样的CISC体系上，一些 SSE、SSE2指令对对齐还是要求很严格的，比如：movdqa（SSE 指令）
+        ，movapd（SSE2指令）。所以，我们还是“偷窥”一下内存对齐。
+        </p>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;编译器通常会为我们做好对齐的工作，但是，当程序员在编译器预期之外使用指针
+        来访问数据时，对齐就会出问题。下面的程序<b>[11]</b>可能就不能正常工作。
+        <blockquote>
+                char foo[10];<br>
+                char *p = &foo[1];<br>
+                unsigned long l = *(unsigned long *)p;<br>
+        </blockquote>
+        因为指针p可能不是4的倍数。对齐问题在结构体中更为明显。
+        <blockquote>
+                <pre>
+                                struct foo_struct {
+                                char foo;             /* 1 byte */
+                                unsigned long baz;    /* 4 bytes */
+                                unsigned short bar;   /* 2 bytes */
+                                char foobar;          /* 1 byte */
+                                };
+                            </pre>
+        </blockquote>
+        上面的结构体在内存中并不像你看到的那样储存，编译器会在其中填充空为来实现对齐，baz的偏移可能会是4而不是1！
+        解决的方法手工去填充或者重新安排结构体成员顺序。
+        <blockquote>
+                <pre>
+                                struct foo_struct {
+                                unsigned long baz;    /* 4 bytes */
+                                unsigned short bar;   /* 2 bytes */
+                                char foo;             /* 1 byte */
+                                char foobar;          /* 1 byte */
+                                };
+                            </pre>
+        </blockquote>
+        <i>ISO C</i>规定编译器绝不能改变结构体成员的顺序，这工作只能由程序员来做。
+        </p>
+        <h3>4.字符集</h3>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;大多数系统使用ASCII或者Unicode来编码字符，而Unicode是兼容ASCII的
+        。所以，如果你只使用英文字符，很多时候你没必要担心字符的编码问题。但是，确实存在其它字符集，
+        和上述两种字符集不兼容，比如：DBCS字符集和IBM的EBCDIC字符集。下面的程序在使用EBCDIC字符集的机器上
+        并不能正常工作！
+        <blockquote>
+                for(i=0; i < strlen(foo); i++)<br>
+                {if(foo[i]>=32 && foo[i] <=126) *(ptr++) = foo[i];}
+        </blockquote>
+        C99只保证：所有位都是0的字节应该在字符集中存在，它是用来结束字符串的空字符；26个大写英文字母及其小写字母，
+        10个十进制数字，下面29个图形字符，
+        <blockquote>
+                <pre>
+                                ! " # % & ' ( ) * + , - . / :
+                                ; < = > ? [ \ ] ^ _ { | } ~</pre>
+        </blockquote>
+        空格字符，和表示垂直制表，水平制表，换页的控制符，应该在最基本的
+        源字符集（source character set）和执行字符集（execution character set）中；
+        0后面的数字字符的值都应该比它前面一个大；每个字符都应该是一个字节大小；源字符集中应该有表示行结束的字符；
+        执行字符集中应该有表示响铃，退格，回车和换行的字符。超出此范围的情况是未定义的。
+        </p>
+
+        <h2>四. 糟糕的“匈牙利表示法”</h2>
+
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;多年前，匈牙利程序员<i>Charles Simonyi</i>设计了一种在变量名中
+        加上特定的前缀来辨别变量类型的命名方法，它的优点很显然，就是可以直接通过变量名来辨认其类型，
+        而不用去查找它的定义。微软后来采用了这种思想,可以在VC中看到大量的这种表示。但这不仅使变量的名字很古怪，
+        很难记，而且还有个很大的缺点，那就是可能会使改变变量类型的工作变得十分艰巨。设想一下,我们在一个大型项目
+        中定义了一个全局变量,经过几十多个函数使用后,我们突然发现这种类型的字节数不够用，我们不得不去改变它的类型。
+        好了，你得从头开始把它的名字都得改一遍！现在很多程序员都放弃了它，除了一些顽固的Windows程序员。
+        关于变量的命名，Unix系统调用的“全部小写”风格或许很值得借鉴，简单而优雅；如果要使用大写字母，不妨
+        学一下Qt的命名风格。</p>
+
+
+        <h2>五. 头文件</h2>
+
+        <h3>1.文件包含宏</h3>
+        &nbsp;&nbsp;&nbsp;&nbsp;有不少人认为，在<i>#include</i>宏命令中&lt;&gt;和""是等价的，他们错了！在#include宏命令中，头文件名称两侧如果是<>则说明头文件及其安装在硬盘中编译程序的标准库区域（在<i>Linux</i>上，这个目录是/usr/include）；而如果是""则说明头文件保存在程序员自己的磁盘目录中，而不是在标准系统目录中的本地库。这点应该引起高度重视，并不是所有的C语言教程中都会明确指出这一点，而忽视它的后果将是缺少相应的头文件。不幸的是，有的编译器在缺少头文件时并不给出警告，应该常使用<i>lint</i>来进一步检查我们的程序。<br>
+        <h3>2.内容</h3>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;我们知道，在预处理阶段，C预处理器把<i>#include</i>后面的头文件拷贝到源代码中去。
+        所以，在头文件中放入些什么内容应该值得注意。通常，我们把常量，类型和函数的声明都放入头文件中。
+        但要注意：千万不要把变量的声明也放进去了！否则可能会产生多次定义的变量！
+        如果可以，“头文件中最好不要再包含头文件。多重包含是系统编程的祸根。在一个C源文件中把文件包含了5次以上去编译并不少见。Unix的/usr/include/sys非常糟糕。
+        ”<b>[10]</b><i>#ifdef</i>可能会解决点问题，但是通常它也会被误用。
+        C的标准库里面有很多头文件都定义了标识自己的宏，在包含之前应该先用<i>#ifdef</i>去检查。
+        比如，stdio.h中有这样的宏：<br>
+        <blockquote>
+                #ifndef _STDIO_H <br>
+                #define _STDIO_H<br>
+                /*omit other code*/<br>
+                #endif<br>
+        </blockquote>
+        这样，我们就可以通过宏来检查有没有包含<i>stdio.h</i>这个头文件了:<br>
+        <blockquote>
+                #ifdef _STDIO_H<br>
+                /*if stdio.h has already been included...*/<br>
+                #endif<br>
+        </blockquote>
+        不注意这一点的后果就是数百行无用的代码被包含进去，传递给词法分析器，消耗大量宝贵的编译时间。
+        </p>
+
+        <h2>六. 函数返回值</h2>
+
+        <h3>1.困惑</h3>
+        &nbsp;&nbsp;&nbsp;&nbsp;有些编程语言不允许放弃函数的返回值，而C不是其中之一。我们通常都这样像<i>void</i>类型的函数一样使用<i>scanf</i>函数，即使我们知道它的原型是<i>int</i>，而且这没有任何错误！<br>
+        <blockquote>
+                ...<br>
+                scanf(...);<br>
+                ...<br>
+        </blockquote>
+        其实这也并不奇怪，你也不经常这样使用下面的语句吗？<br>
+        <blockquote>
+                int x=9;<br>
+                ++x;<br>
+                ...<br>
+        </blockquote>
+        表达式<i>++x</i>也有它的值，但是你也没有使用它的“返回”值（这里为10）！正如<i>++x</i>，<i>scanf</i>也是既有值，也有作用效果（把输入的值放入某块内存中，而<i>++x</i>的作用效果是把<i>x</i>的值加一），我们只是用到它们的作用效果，而不使用它们的值。<i></i>为了明确地表示不使用返回值，最好这样来写：<br>
+        <blockquote>
+                ...<br>
+                (void)scanf(...);<br>
+                ...<br>
+        </blockquote>
+        <h3>2.历史遗留问题</h3>
+        &nbsp;&nbsp;&nbsp;&nbsp;因为<i>ISO C</i>早期并没有<i>void</i>类型，它允许我们像<i>void</i>类型那样使用某些<i>int</i>类型的函数，编译器放松了对这些函数原型的检查，不仅如此而且如果你在函数标题中的返回类型字段保持空白，那么返回类型缺省为<i>int</i>，这是<i>ISO C</i>为了维持与旧版本之间的兼容性。这一点应该引起足够重视，因为如果我们遗漏原型或原型在第一次函数调用后出现，编译器可能使用第一次函数调用中的形参类型构建一个原型，返回类型永远是<i>int</i>！这可能对，当然也可能不对。<p></p>
+
+
+        <h2>七. 当心<i>calloc</i>函数</h2>
+
+        &nbsp;&nbsp;&nbsp;&nbsp;到底<i>calloc</i>分配内存成功时到底做了一些什么，相信很多人都认为它为数组分配了块内存，
+        而且还把其所有数组元素初始化为0。这也难怪，因为很多C语言教程中都是那么讲的。可是<i>calloc</i>真的像我们想的那样做了吗？
+        答案是不确定的。<b>[4]</b>中第7.20.3.1节，关于<i>calloc</i>描述后面的Note不知你是否注意到了。
+        Note是这样的："Note that this need not be the same as the representation of floating-point zero or a null pointer constant."
+        好了，这就对了。C语言不保证所有位为0是指针(null)还是浮点数(0.0)的零表示！如果可移植性对你真的很重要，
+        那么不要倚赖<i>calloc</i>把变量初始化为0；如果数组元素是指针或浮点数(或者你正创建包含浮点数或指针的结构体或联合数组)，则可以利用循环自己进行初始化。
+        初始化真的很重要，尤其是你对可移植性要求高时，指针是否初始化为<i>null</i>，数组元素是否都被初始化等有时决定着程序的成败，而查出这些错误又是那么的困难。
+        我们唯一能做的就是格外小心。<p></p>
+
+
+
+        <h2>八. 奇怪的<i>sprintf</i>函数</h2>
+
+        &nbsp;&nbsp;&nbsp;&nbsp;<b>[4]</b>中第7.19.6.6节关于<i>sprintf</i>函数的描述如下： <br>
+        <blockquote>
+                "#include &lt;stdio.h&gt;<br>
+                <br>
+                int sprintf(char * restrict s,const char * restrict format,...);
+                <br><br>
+                <i>sprintf</i>函数等价于<i>fprintf</i>，除了输出是写入一个数组(记为参数s)而不是一个流。<i>NUL</i>字符被写入所写字符组的结尾；它不
+                被计入返回值。如果复制发生在重叠的对象之间，行为则是未定义的。"</blockquote>
+        <br>
+        这倒是没什么奇怪的，可是有人曾想利用sprintf()给一个字符数组添加不同类型的值：<br>
+        <blockquote>
+                sprintf(mystring, "%s%d%s%f", string, j, otherstring, d);<br>
+        </blockquote>
+        很可惜，它并不能真正地将其它类型加入字符数组中（听起来像Matlab中的元胞数组），而是统统将它们转化成字符后又写入的。<br>
+        <blockquote>
+                char tempstring[50]={0};<br>
+                char* otherstring;<br>
+                int d=5;<br>
+                float j=3.14;<br>
+                <br>
+                otherstring="other";<br>
+                sprintf(tempstring,"%f%s%d",j,otherstring,d);<br>
+                printf("%s\n",tempstring);<br>
+                printf("%d\n",tempstring[13]);<br>
+        </blockquote>
+        把一种其它类型的数据转换成字符数组储存，使用<i>sprintf</i>函数真的是一个不错的方式。然而，<i>sprintf</i>同样是一个问题函数。它致命的缺陷就是它并不知道写入的字节数是否超出了缓冲区的大小！<br>
+        <blockquote>
+                int showmsg(int line, unsigned int err, char* msg){<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;char buf[100];<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;if(msg==NULL)return -1;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;else <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sprintf(buf,"Err occurred in line %d, %u is %s.",line,err,msg);<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;return 0;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+        </blockquote>
+        在上面的程序中，提示占了28个字节，<i>line</i>可能会占10个字节，<i>err</i>可能会占11个字节。也就是说，<i>msg</i>的大小不能超过50个字节！我们从<i>sprintf</i>的返回值中得不到任何<i>buf</i>是否够用的信息。这很危险，而且几乎没有安全的使用它的方式！<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<i>Windows</i>上提供了一个<i>_snprintf</i>函数，它的原型是：
+        <blockquote>
+                int _snprintf(char* buffer, size_t count, const char* format[,argument]...);
+        </blockquote>
+        与<i>sprintf</i>不同的是，当缓冲区不够用时，<i>_snprintf</i>会返回一个负数，但它并不保证目的缓冲区以NUL结尾，你必须手工去做。这倒是挺好用，遗憾的是，<i>_snprintf</i>并不是<i>ISO C99</i>的一部分。
+        <p></p>
+
+
+        <h2>九. <i>strncat</i>和<i>strncpy</i>函数并不可靠</h2>
+        &nbsp;&nbsp;&nbsp;&nbsp;“<i>strcpy</i>和<i>strcat</i>是不安全的，应该用<i>strncpy</i>和<i>strncat</i>来代替。”这是很多C程序员挂在嘴边的话。其实，说这句话的人往往也不清楚<i>strncpy</i>和<i>strncat</i>是如何工作的，而这往往会更糟糕！关于<i>strncpy</i>最大的误解就是：它会用<i>NUL</i>(或'\0')来结束目的字符串。而实际上仅当源字符串的长度小于参数<i>n</i>时上面的那句话才正确，这时你还要当心它会用<i>NUL</i>来填充空缺位。当拷贝源字符串的一部分时，正确的做法是使用<i>strncpy</i>之后，自己手工添加<i>NUL</i>来结束字符串。更准确的说是，没有必要去手工结束一个<i>static</i>字符串或者通过<i>calloc</i>分配的字符数组，因为它们在分配时就被初始化为0。关于<i>strncat</i>最大的误用就是错误地使用长度参数<i>n</i>。虽然<i>strncat</i>保证以<i>NUL</i>来结束字符串，但你不应该将<i>NUL</i>也计算在参数<i>n</i>内。更重要的是，<i>n</i>不是目的字符串的长度，而是可以利用的空间的大小，它通常是一个应该被计算出来的变量，而不是一个常量。最后，你可能会说：“这些我都知道了。”但是，仍然不推荐你使用<i>strncat</i>和<i>strncpy</i>函数，因为它们糟糕的设计。看看下面的程序有多么麻烦！
+        <br>
+        <blockquote>
+                strncpy(path, homedir,sizeof(path) - 1);<br>
+                path[sizeof(path) - 1] = '\ 0';<br>
+                strncat(path, "/",sizeof(path) - strlen(path) - 1);<br>
+                strncat(path, ".foorc",sizeof(path) - strlen(path) - 1);<br>
+                len = strlen(path);<br>
+        </blockquote>
+        <b>[6]</b>中推荐使用<i>strlcpy</i>和<i>strlcat</i>函数（关于这两个函数，可以查看在ftp.openbsd.org服务器上/pub/OpenBSD/src/lib/libc/string的目录中的源代码以及相关手册），因为它们总是保证以NUL结束字符串，它们都把目的字符数组的全部长度作为参数，而且它们返回的是程序员想得到的字符串的总长度。它们的原型是：<br>
+        <blockquote>
+                size_t strlcpy(char *dst, const char *src, size_t size);<br>
+                size_t strlcat(char *dst, const char *src, size_t size);<br>
+        </blockquote>
+        上面的程序可以用<i>strlcpy</i>和<i>strlcat</i>来重写，非常方便。<br>
+        <blockquote>
+                strlcpy(path, homedir, sizeof(path));<br>
+                strlcat(path, "/", sizeof(path));<br>
+                strlcat(path, ".foorc", sizeof(path));<br>
+                len = strlen(path);<br>
+        </blockquote>
+        可惜，它们只是<i>OpenBSD</i>上的。希望未来的C标准委员会会把这两个方便的函数加入标准之中。<p></p>
+
+
+
+        <h2>十. 难以控制的<i>strtok</i>函数</h2>
+
+        &nbsp;&nbsp;&nbsp;&nbsp;<i>strtok</i>函数真的不好用，不是吗？在<i>ISO C99</i>中关于此函数的描述长达6条（见<b>[4]</b>中第7.21.5.8节），连<i>Linux Programmer's Manual</i>中都说，永远不要使用这个函数（还有下面讲提到的<i>strtok_r</i>函数）。<i>strtok</i>虽然可以毫不含糊地将每一行分解为单个字段，并且没有空字段，但也会使代码不可重入。因为<i>strtok</i>函数拥有一块与之相关的静态数据――如果传递给它一个空指针，它将“不断搜索”(你不妨试着编写自己的<i>strtok</i>函数。）。这会带来不小的麻烦！如果在一个递归函数中使用<i>strtok</i>就更应该小心了，因为带有静态数据的对象可能不能与递归函数默契合作。而且这个函数也没有为我们提供抵达其内部缓冲区的方式。同样，如果在同一个程序中出现多个解析不同字符串的<i>strtok</i>函数，对各自的字符串的解析就可能会互相干扰，不能正常工作。<b>[2]</b>建议试一下扩展函数<i>strsep</i>，但是它不是可移植的。它与<i>strtok</i>功能相似，但它没有使用静态缓冲区。它的原型是：<br>
+        <blockquote>
+                #include &lt;string.h&gt;<br>
+                <br>
+                char *strsep(char **stringp, const char *delim);
+        </blockquote>
+        如果<i>*stringp</i>是<i>NULL</i>，<i>strsep</i>什么都不做，安静地返回<i>NULL</i>。否则，<i>strsep</i>在<i>*stringp</i>中搜寻第一个出现的限定符<i>delim</i>中的任意字符，并且用<i>NUL</i>来结束它之前的字符串，让<i>*stringp</i>指向它的后面一个字符。如果没发现任何字符，<i>*stringp</i>被设为<i>NULL</i>。它返回的是解析出的字符串。<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;另外，如果你在<i>Unix/Linux</i>系统上编写程序，当两个线程都调用<i>strtok</i>时，还会导致线程不安全。<i>POSIX</i>定义了一个线程安全的函数<i>strtok_r</i>，用来替代<i>strtok</i>。“_r”表示可重入(<i>reentrant</i>)。它的原型是：<br>
+        <blockquote>
+                #include &lt;string.h&gt;<br>
+                <br>
+                char *strtok_r(char *restrict s, const char *restrict delim, char **restrict lasts);
+        </blockquote>
+        除了额外的参数<i>lasts</i>之外，<i>strtok_r</i>与<i>strtok</i>表现类似。<i>lasts</i>是用户提供的一个指针，指向<i>strtok_r</i>用来存放下一次解析的起始地址的那个单元。可它也不怎么好用。
+        总上，不要使用<i>strtok</i>函数，除非你对它非常了解。但在环境适宜时，它仍不失为一个优秀的工具。更进一步说，除非是在受控的情况下，不要使用静态变量。<p></p>
+
+        <h2>十一. 避免分段错误</h2>
+
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;<i>Segmentation Fault</i>，也就是分段错误，是我们编写C程序时很常见的错误，
+        尤其是在Linux上。然而很多人只是知道它与指针有关，却不知道引发错误的细节。我想在这里简单地说说我的理解。
+        我们知道操作系统管理虚拟内存有两种方式：一种是分段，另一种是分页。分页的意思是内存被分成相等大小的页面来管理，
+        每个页中包含有内存的字。分段的意思是每个进程都有一个所需大小的内存段，段与段之间以空白的存储块相间隔。
+        操作系统知道每一段的上界，并且每个段都以虚拟0地址开始。当程序访问一个内存块时，它调用的是虚拟地址，
+        但<i>MMU</i>（<i>Memory Management Unit</i>）会把它映射到一个真实的地址。
+        如果操作系统发现请求地址与有效的段地址都不匹配，它就会向进程发送一个终止信号。
+        <i>Segmentation Fault</i>也就这样产生了。如果<i>Segmentation Fault</i>发生，
+        说明你的程序中有错误指针，内存泄露，或者其它访问错误内存地址的错误。请你再仔细地检查你的指针，
+        数组是否正确，一般是使用<i>malloc</i>分配了多少内存就使用多少，不使用未分配内存的指针进行<i>strcpy</i>等操作。</p>
+
+
+        <h2>十二. 再谈命名</h2>
+
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;在阅读这一节之前，你必须了解<i>ISO C99</i>中的几个概念。一个源文件及其包含的头文件或源文件叫做预处理翻译单元（<i>preprocessing translation unit</i>）。完成预处理后，之前的预处理翻译单元就改叫翻译单元（<i>translation unit</i>）。使在不同作用域中声明的，或在同一作用域中声明多次的一个标识符指向同一个目标或函数，叫做链接（<i>linkage</i>）。在构成整个程序的一系列的翻译单元和库中，同一个拥有外部链接（<i>external linkage</i>，外部指的是翻译单元的外部）的标识符（叫做外部名字（<i>external name</i>））的每次声明都代表同一个目标或函数；在一个翻译单元中，同一个拥有内部链接（<i>internal linkage</i>）的标识符的每次声明也都代表同一个目标或函数。宏名或没有外部链接的标识符叫做内部名字（<i>internal name</i>）。
+        <i>ISO C99</i>规定：至少内部名字的前31字符必须是唯一的，外部名字的前6个字符是必须唯一的，大小写可以不区分。所以，你在定义名字时一定要确保不与C预留的标识符冲突。否则行为是未定义的。所以，下面的外部名字看起来不同，但它们对编译器来说是可能是相同的：<br><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<i>cleared()</i>和<i>clearerr()</i>，<i>CallOccasionally()</i>和<i>calloc()</i>，<i>reallocation</i>和<i>realloc()</i><br><br>
+        当然了，可能你的编译器能区分6个以上的字符，能区分大小写。但是上述规则还是值得遵循的。关于C和C++预留的标识符，<b>[7]</b>中作了详细的整理，是很好的参考。</p>
+        <h2>十三. 可变参数</h2>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;标准库<i>stdarg.h</i>提供了一种可移植的方式，让程序员编写带可变参数的函数，
+        就像<i>printf</i>。可它究竟是怎么实现的呢？下面分析一下可变参数在IA-32平台上的具体实现。
+        一种实现如下：
+        <blockquote>
+                <pre>
+                                    #ifndef STDARG_H
+                                    #define STDARG_H
+
+                                    typedef char* va_list;
+
+                                    #define va_rounded_size(type) \
+                                    (((sizeof (type) + sizeof (int) - 1) / sizeof (int)) * sizeof (int))
+
+                                    #define va_start(ap, v) \
+                                    ((void) (ap = (va_list) &v + va_rounded_size (v)))
+
+                                    #define va_arg(ap, type) \
+                                    (ap += va_rounded_size (type), *((type *)(ap - va_rounded_size (type))))
+
+                                    #define va_end(ap) ((void) (ap = 0))
+
+                                    #endif
+                                    </pre>
+        </blockquote>
+        内部宏va_rounded_size计算指定类型是<i>int</i>类型的多少倍，结果向上取整，因为IA-32中栈是4字节对齐的。
+        在宏<i>va_start</i>中，<i>v</i>是你声明的最后一个参数，<i>va_start</i>让<i>ap</i>指向它后面的参数，并且什么都不返回。
+        宏<i>va_arg</i>访问参数列表中的下一个元素，让<i>ap</i>先指向下一个，再返回它的前一个，即原来<i>ap</i>指向的参数。
+        <i>va_end</i>把<i>ap</i>置为零，什么都不返回。以这三个宏为接口，就能实现可变参数函数。
+        </p>
+        <h2>十四. 类型修饰符</h2>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;C99中定义了三个类型修饰符（type qualiﬁer），分别是：<i>const</i>，<i>volatile</i>，<i>restrict</i>。</p>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;<i>const</i>的使用并不像你想像得那么简单。不能简单的把<i>const</i>认为
+        就是<i>constant</i>。<i>const</i>真正的意思是只读（read-only），使用它是为了防止一些变量被修改，比如：
+        字符串拷贝时的源字符串。const的位置很重要，比如<i>const int* x;</i>是定义一个指向只读整数的指针，整数不能被修改而指针本身可以；
+        而<i>int const* x;</i>是定义一个指向一个整数的只读指针，整数可以被修改而指针不能。注意，“不能被修改”
+        不是说永远不能被修改，而是不能通过这个符号修改，而通过别的可以。下面的程序是正确的：
+        <blockquote>
+                const int a=10;<br>
+                int *p;<br>
+                p=(int*)&a;<br>
+                (*p)++;<br>
+        </blockquote>
+        让人吃惊的是，<i>const char**</i>和<i>char**</i>并不兼容，<b>[5]</b>中很好地解释了原因，这里就不再赘述。
+        </p>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;<i>volatile</i>关键字把变量标记为可以改变而且没有警告，它通知编译器每次遇到被标记
+        的变量都需要重新加载，而不是储存起来去访问它的拷贝。使用<i>volatile</i>的最好的例子莫过于处理硬件中断，寄存器，和
+        同步进程共享变量。
+        </p>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;最难以理解的修饰符是<i>restrict</i>，C99标准第6.7.3.1中的对它的定义非常隐晦。
+        其实，<i>restrict</i>的作用就是限制一个指针对一块内存的访问，进一步说就是如果一块内存区域通过一个受限制
+        指针访问，那么它就不能通过另一个受限指针访问。可见，与前两个不同，<i>restrict</i>只能用于指针。
+        引入<i>restrict</i>的目的是确保同一块内存上没有其它引用，让编译器更好地优化指令，生成更有效的汇编代码。
+        </p>
+        <br>
+        参考资料:<br>
+        <br>
+        <b>[1]</b>《The C Programming Language,2nd Ed》<br>
+        Brian W Kernighan and Dennis M Ritchie, Prentice Hall, 1988, ISBN 0-13-110362-8.<br>
+        <b>[2]</b>《C Unleashed》<br>
+        Richard Heathfield, Lawrence Kirby Etc.<br>
+        <b>[3]</b>《Applied C: An Introduction and More》<br>
+        Alice E.Fischer and David W.Eggert, McGraw Hill, ISBN 7-5053-6931-8.<br>
+        <b>[4]</b>《ISO 1999 Programming languages-C》<br>
+        <b>[5]</b>《Expert C Programming》<br>
+        Peter van der Liden, Prentice Hall, ISBN 0-13-177429-8.<br>
+        <b>[6]</b>《Strlcpy and strlcat - consistent, safe, string copy and concatenation》<br>
+        Todd C. Miller and Theo de Raadt, 1999 USENIX Annual Technical Conference.<br>
+        <b>[7]</b>《C Reserved Identifiers》<br>
+        Stan Brown, 15 Sep 2003.<br>
+        <b>[8]</b>《C Traps and Pitfalls》<br>
+        Andrew Koening, ISBN 0-201-17928-8, Addison-Wesley.<br>
+        <b>[9]</b>《On Holy Wars and A Plea for Peace》<br>
+        Danny Cohen, <i>IEEE Computer</i>, 14(10):48-54, October 1981.<br>
+        <b>[10]</b>《Notes on Programming in C》<br>
+        Rob Pike, February 21, 1989.<br>
+        <b>[11]</b>《Linux Kernel Development, Second Edition》<br>
+        Robert Love, January 12, 2005, Sams Publishing, ISBN 0-672-32720-1.
+</body>
+
