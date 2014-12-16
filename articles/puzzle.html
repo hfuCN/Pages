@@ -1,0 +1,180 @@
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>Pi</title>
+        <link href="./style.css" rel=stylesheet>
+        </link>
+</head>
+<h1><div align="center">解读求pi的怪异代码</div></h1>
+<div align="center"><i>Hu Fu</i></div>
+<div align="center"><i>2th November, 2014</i></div><br>
+<br>
+<h2><div align="center">引言</div></h2>
+&nbsp;&nbsp;&nbsp;&nbsp;网上流传着一个怪异的求pi程序，虽然只有三行却能求出pi值连小数点前共800位。
+这个程序如下：<br>
+<blockquote>
+    /*某年Obfuscated C Contest佳作选录:*/ <br>
+    #include < stdio.h><br>
+        long a=10000, b, c=2800, d, e, f[2801], g; <br>
+        main(){<br>
+        for(;b-c;)f[b++]=a/5; <br>
+        for(;d=0,g=c*2;c-=14,printf("%.4d",e+d/a),e=d%a) <br>
+        for(b=c;d+=f[b]*a,f[b]=d%--g,d/=g--,--b;d*=b);<br>
+        } <br>
+        <br>
+        /*
+        (本程式可算出pi值连小数点前共800位) <br>
+        (本程式录自sci.math FAQ,原作者未详)*/ <br>
+</blockquote>
+咋一看，这程序还挺吓人的。别慌，下面就告诉你它是如何做到的，并且告诉你写怪异C程序的一些技巧。^_^<p></p>
+<h2><div align="center">展开化简</div></h2>
+&nbsp;&nbsp;&nbsp;&nbsp;我们知道，在C语言中，for循环和while循环可以互相代替。<br>
+<blockquote>
+    for(statement1;statement2;statement3){<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;statements;<br>
+    }<br>
+</blockquote>
+上面的for语句可以用下面的while语句来代替：<br>
+<blockquote>
+    statement1;<br>
+    while(statement2){<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;statements;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;statement3;<br>
+    }<br>
+</blockquote>
+而且要写怪异的C程序，逗号运算符无疑是一个好的助手，它的作用是：
+<blockquote>从左到右依次计算各个表达式的值，并且返回最右边表达式的值。</blockquote>
+把它嵌入for循环中是写怪异代码的常用技巧之一。所以，上面的程序可以展开为：
+<blockquote>
+    #include < stdio.h> /*1*/<br>
+        /*2*/<br>
+        long a=10000, b, c=2800, d, e, f[2801], g;  /*3*/<br>
+        main(){ /*4*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;while(b-c!=0){  /*5*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;f[b]=a/5;  /*6*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b++;  /*7*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  /*8*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;d=0;  /*9*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;g=c*2;  /*10*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;while(g!=0){  /*11*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b=c;  /*12*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d+=f[b]*a;  /*13*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;f[b]=d%--g;  /*14*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d=d/g--;  /*15*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--b;  /*16*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;while(b!=0){  /*17*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d=d*b+f[b]*a;  /*18*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;f[b]=d%--g;  /*19*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d=d/g--;  /*20*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--b;  /*21*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  /*22*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;c-=14;  /*23*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printf("%.4d",e+d/a);  /*24*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e=d%a;  /*25*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d=0;  /*26*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;g=c*2;  /*27*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  /*28*/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;}  /*29*/<br>
+</blockquote>
+现在是不是好看一点了？<p></p>
+<h2><div align="center">进一步化简</div></h2>
+&nbsp;&nbsp;&nbsp;&nbsp;你应该能注意到a的值始终是10000，所以我们可以把a都换成10000。
+再就是，仔细观察g，在外层循环中，每次循环用它做除法或取余时，它总是等于2*c-1，而b总是初始化为c。
+在内层循环中，b每次减少1，g每次减少2。你这时会想到了吧？用2*b-1代替g！代进去试试，没错！另外，
+我们还能做一点化简，第26行的d=0是多余的，我们把它合并到第13行中去，第13行可改写为：
+d=f[b]*a;　。所以程序可以改为：
+<blockquote>
+    #include < stdio.h><br>
+        <br>
+        long  b, c=2800, d, e, f[2801]; <br>
+        main(){<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;while(b-c!=0){<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;f[b]=2000;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b++;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;while(c!=0){<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b=c;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d=f[b]*10000;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;f[b]=d%(b*2-1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d=d/(b*2-1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--b;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;while(b!=0){<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d=d*b+f[b]*10000;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;f[b]=d%(b*2-1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d=d/(b*2-1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--b;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;c-=14;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printf("%.4d",e+d/10000);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e=d%10000;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;} <br>
+</blockquote>
+少了两个变量了!<p></p>
+<h2><div align="center">深入分析</div></h2>
+&nbsp;&nbsp;&nbsp;&nbsp;好了，马上进入实质性的分析了。一定的数学知识是非常有必要的。
+首先,必须知道下面的公式可以用来求pi:<blockquote>
+    pi/2=1+1!/3!!+2!/5!!+3!/7!!+...+k!/(2*k+1)!!+...</blockquote>
+只要项数足够多，pi就有足够的精度。至于为什么，我们留给数学家们来解决。<br>
+&nbsp;&nbsp;&nbsp;&nbsp;写过高精度除法程序的人都知道如何用整数数组来进行除法用法，而避免小数。其实很简单，
+回想一下你是如何徒手做除法的。用除数除以被除数，把得数放入结果中，余数乘以10后继续做
+下一步除法，直到余数是零或达到了要求的位数。<br>
+&nbsp;&nbsp;&nbsp;&nbsp;原程序使用的数学知识就那么多,之所以复杂难懂是因为它把算法非常巧妙地放到循环中去了。
+我们开始具体来分析程序。
+首先，我们从数学公式开始下手。我们求的是pi，而公式给出的是pi/2。所以，
+我们把公式两边同时乘以2得:<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;pi=2*1+2*1!/3!!+2*2!/5!!+2*3!/7!!+...+2*k!/(2*k+1)!!+...<br><br>
+接着，我们把它改写成另一种形式,并展开：<br>
+<blockquote>
+    pi=2*1+2*1!/3!!+2*2!/5!!+2*3!/7!!+...+2*n!/(2*n+1)!!<br><br>
+    &nbsp;=2*(n-1)/(2*n-1)*(n-2)/(2*n-3)*(n-3)/(2*n-5)*...*3/7*2/5*1/3<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+2*(n-2)/(2*n-3)*(n-3)/(2*n-5)*...*3/7*2/5*1/3<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+2*(n-3)/(2*n-5)*...*3/7*2/5*1/3<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+2*3/7*2/5*1/3<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+2*2/5*1/3<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+2*1/3<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+2*1<br>
+</blockquote>
+对着公式看看程序，可以看出，b对应公式中的n，2*b-1对应2*n-1。b是从2800开始的，也就是说n=2800。（至于为什么n=2800时,能保证pi的前800位准确不在此讨论范围。）看程序中的相应部分：
+<blockquote>
+    d=d*b+f[b]*10000;<br>
+    f[b]=d%(b*2-1);<br>
+    d=d/(b*2-1);<br>
+</blockquote>
+d用来存放除法结果的整数部分，它是累加的，所以最后的d将是我们要的整数部分。而f[b]用来存放计算到b为止的余数部分。<br>
+&nbsp;&nbsp;&nbsp;&nbsp;到这里你可能还不明白。一是，为什么数组有2801个元素？很简单，因为作者想利用f[1]~f[2800]，而C语言的数组下标又是从0开始的，f[0]是用不到的。
+二是，为什么要把数组元素除了f[2800]都初始化为2000？10000有什么作用？这倒很有意思。因为从printf("%.4d",e+d/10000); 看出d/10000是取d的第4位以前的数字，而e=d%10000;　，e是d的后4位数字。
+而且，e和d差着一次循环。所以打印的结果恰好就是我们想要的pi的相应的某4位！开始时之所以把数组元素初始化为2000，是因为把pi放大1000倍才能保证整数部分有4位，而那个2就是我们公式中两边乘的2！所以是2000！
+注意，余数也要相应乘以10000而不是10！f[2800]之所以要为0是因为第一次乘的是n-1也就是2799而不是2800!每计算出4位，c都要相应减去14，也就保证了一共能够打印出4*2800/14=800位。而且，这竟然不会影响结果的准确度！<p></p>
+&nbsp;&nbsp;&nbsp;&nbsp;偶然在网上见到一个根据上面的程序改写的“准确”（这个准确是指没有漏掉f[]数组中的的任何一个元素。）打印2800位的程序，如下：
+<blockquote>
+    long b,c=2800,d,e,f[2801],g;<br>
+    int main(int argc,char* argv[])<br>
+    {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;for(b=0;b<c;b++)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;f[b] = 2;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;e=0;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;while(c > 0)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;{<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d=0;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for(b=c;b>0;b--)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d*=b;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d+=f[b]*10;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;f[b]=d%(b*2-1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d/=(b*2-1);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;c-=1;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printf("%d",(e+d/10)%10);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e=d%10;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;return 0;<br>
+        } <br>
+</blockquote>
+不妨试试把上面的程序压缩成3行。<p></p>
+<h2><div align="center">结论</div></h2>
+&nbsp;&nbsp;&nbsp;&nbsp;以Knuth图灵演讲中的一句话结束全文： <blockquote>
+    We have seen that computer programming is an art, because it applies accumulated knowledge to the world, because it requires skill and ingenuity, and especially because it produces objects of beauty. A programmer who subconsciously views himself as an artist will enjoy what he does and will do it better. 
+</blockquote>
+与大家共勉！^_^<br>
+(EOF)

@@ -1,0 +1,295 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+        <HEAD>
+                <META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=gb2312">
+                <TITLE>Linux内核中的红黑树</TITLE>
+                <META NAME="GENERATOR" CONTENT="vim (Linux)">
+                <META NAME="CREATED" CONTENT="20070206;10375200">
+                <META NAME="CHANGED" CONTENT="16010101;8042600">
+                <STYLE>
+<!--
+                @page { size: 21cm 29.7cm; margin: 2cm }
+                P { margin-bottom: 0.21cm; direction: ltr; color: #000000; widows: 0; orphans: 0 }
+                P.western { font-family: "SimSun", serif; font-size: 12pt; so-language: en-US }
+                P.cjk { font-family: "SimSun"; font-size: 12pt; so-language: zh-CN }
+                P.ctl { font-family: "SimSun"; font-size: 12pt; so-language:  }
+                H1 { margin-bottom: 0.21cm; direction: ltr; color: #000000; widows: 0; orphans: 0 }
+                H1.western { font-family: "SimSun", sans-serif; font-size: 16pt; so-language: en-US }
+                H1.cjk { font-family: "SimSun"; font-size: 16pt; so-language: zh-CN; font-style: normal; font-weight: bold }
+                H1.ctl { font-family: "SimSun"; font-size: 16pt; so-language: ; font-weight: bold }
+                -->
+                </STYLE>
+        </HEAD>
+        <BODY LANG="zh-CN" TEXT="#000000" DIR="LTR">
+                <H1 CLASS="cjk" ALIGN=CENTER><div align="center"><FONT FACE="SimSun, sans-serif"><SPAN LANG="en-US"><B><FONT SIZE=4 STYLE="font-size: 16pt">Linux</FONT></B></SPAN></FONT><B><FONT SIZE=4 STYLE="font-size: 16pt">内核中的红黑树</FONT></B></div></H1>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" ALIGN=RIGHT STYLE="margin-bottom: 0cm"><div align="right"></div></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">   
+                红黑树是平衡二叉树的一种，它有很好的性质，树中的结点都是有序的，而且因为它本身就是平衡的，所以查找也不会出现非常恶劣的情况，基于二叉树的操作的时间复杂度是<FONT FACE="SimSun, serif"><SPAN LANG="en-US">O(log(N))</SPAN></FONT>。<FONT FACE="SimSun, serif"><SPAN LANG="en-US">Linux</SPAN></FONT>内核在管理<FONT FACE="SimSun, serif"><SPAN LANG="en-US">vm_area_struct</SPAN></FONT>时就是采用了红黑树来维护内存块的。</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">   
+                先到<FONT FACE="SimSun, serif"><SPAN LANG="en-US">include/linux/rbtree.h</SPAN></FONT>中看一下红黑树的一些定义，如下：</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                rb_node</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">{</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">unsigned
+                                long  rb_parent_color;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">#define
+                                RB_RED          0</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">#define
+                                RB_BLACK        1</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                rb_node *rb_right;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                rb_node *rb_left;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">}
+                                __attribute__((aligned(sizeof(long))));</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                rb_root</SPAN></FONT>只是<FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                rb_node*</SPAN></FONT>的一个包装，这样做的好处是看起来不用传递二级指针了。不错，很简单。再看一下下面几个重要的宏，细心的你一定会发现，<FONT FACE="SimSun, serif"><SPAN LANG="en-US">rb_parent_color</SPAN></FONT>其实没那么简单，<FONT FACE="SimSun, serif"><SPAN LANG="en-US">Andrea
+                                Arcangeli</SPAN></FONT>在这里使用了一个小的技巧，不过非常棒。正如名字所暗示，这个成员其实包含指向<FONT FACE="SimSun, serif"><SPAN LANG="en-US">parent</SPAN></FONT>的指针和此结点的颜色！它是怎么做到的呢？很简单，对齐起了作用。既然是<FONT FACE="SimSun, serif"><SPAN LANG="en-US">sizeof(long)</SPAN></FONT>大小的对齐，那么在<FONT FACE="SimSun, serif"><SPAN LANG="en-US">IA-32</SPAN></FONT>上，任何<FONT FACE="SimSun, serif"><SPAN LANG="en-US">rb_node</SPAN></FONT>结构体的地址的低两位肯定都是零，与其空着不用，还不如用它们表示颜色，反正颜色就两种，其实一位就已经够了。</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">这样，提取<FONT FACE="SimSun, serif"><SPAN LANG="en-US">parent</SPAN></FONT>指针只要把<FONT FACE="SimSun, serif"><SPAN LANG="en-US">rb_parent_color</SPAN></FONT>成员的低两位清零即可：</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">#define
+                                rb_parent(r)   ((struct rb_node *)((r)-&gt;rb_parent_color &amp; ~3))</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">取颜色只要看最后一位即可：</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">#define
+                                rb_color(r)   ((r)-&gt;rb_parent_color &amp; 1)</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">测试颜色和设置颜色也是水到渠成的事了。需要特别指出的是下面的一个内联函数：</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">static
+                                inline void rb_link_node(struct rb_node * node, struct rb_node *
+                                parent, struct rb_node ** rb_link);</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">它把<FONT FACE="SimSun, serif"><SPAN LANG="en-US">parent</SPAN></FONT>设为<FONT FACE="SimSun, serif"><SPAN LANG="en-US">node</SPAN></FONT>的父结点，并且让<FONT FACE="SimSun, serif"><SPAN LANG="en-US">rb_link</SPAN></FONT>指向<FONT FACE="SimSun, serif"><SPAN LANG="en-US">node</SPAN></FONT>。</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">我们把重点集中在<FONT FACE="SimSun, serif"><SPAN LANG="en-US">lib/rbtree.c</SPAN></FONT>上，看看一些和红黑树相关的重要算法。开始之前我们一起回忆一下红黑树的规则：</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">1.
+                </SPAN></FONT>每个结点要么是红色要么是黑色；</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">2.
+                </SPAN></FONT>根结点必须是黑色；</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">3.
+                </SPAN></FONT>红结点如果有孩子，其孩子必须都是黑色；</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">4.
+                </SPAN></FONT>从根结点到叶子的每条路径必须包含相同数目的黑结点。</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">这四条规则可以限制一棵排序树是平衡的。</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">__rb_rotate_left</SPAN></FONT>是把以<FONT FACE="SimSun, serif"><SPAN LANG="en-US">root</SPAN></FONT>为根的树中的<FONT FACE="SimSun, serif"><SPAN LANG="en-US">node</SPAN></FONT>结点进行左旋，<FONT FACE="SimSun, serif"><SPAN LANG="en-US">__rb_rotate_right</SPAN></FONT>是进行右旋。这两个函数是为后面的插入和删除服务，而不是为外部提供接口。</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">新插入的结点都设为叶子，染成红色，插入后如果破坏了上述规则，通过调整颜色和旋转可以恢复，二叉树又重新平衡。插入操作的接口函数是</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">void
+                                rb_insert_color(struct rb_node *node, struct rb_root *root);</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">它把已确定父结点的<FONT FACE="SimSun, serif"><SPAN LANG="en-US">node</SPAN></FONT>结点融入到以<FONT FACE="SimSun, serif"><SPAN LANG="en-US">root</SPAN></FONT>为根的红黑树中，具体算法的分析可以参考<FONT FACE="SimSun, serif"><SPAN LANG="en-US"><B>[1]</B></SPAN></FONT><SPAN STYLE="font-weight: medium">中</SPAN>第<FONT FACE="SimSun, serif"><SPAN LANG="en-US">14.3</SPAN></FONT>节，这里的实现和书中的讲解几乎完全一样。怎么确定<FONT FACE="SimSun, serif"><SPAN LANG="en-US">node</SPAN></FONT>的父结点应该在调用<FONT FACE="SimSun, serif"><SPAN LANG="en-US">rb_insert_color</SPAN></FONT>之前通过手工迭带完成。值得指出的一点是，虽然插入操作需要一个循环迭代，但是总的旋转次数不会超过两次！所以效率还是很乐观的。</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">删除操作多多少少都有点麻烦，它要先执行像普通二叉查找树的&ldquo;删除&rdquo;，然后根据删除结点的颜色来判断是否执行进一步的操作。删除的接口是：</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">void
+                                rb_erase(struct rb_node *node, struct rb_root *root);</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">其实它并没有真正删除<FONT FACE="SimSun, serif"><SPAN LANG="en-US">node</SPAN></FONT>，而只是让它和以<FONT FACE="SimSun, serif"><SPAN LANG="en-US">root</SPAN></FONT>为根的树脱离关系，最后它还要判断是否调用<FONT FACE="SimSun, serif"><SPAN LANG="en-US">__rb_erase_color</SPAN></FONT>来调整。具体算法的讲解看参考<FONT FACE="SimSun, serif"><SPAN LANG="en-US"><B>[1]</B></SPAN></FONT>中第<FONT FACE="SimSun, serif"><SPAN LANG="en-US">13.3</SPAN></FONT>和<FONT FACE="SimSun, serif"><SPAN LANG="en-US">14.4</SPAN></FONT>节，<FONT FACE="SimSun, serif"><SPAN LANG="en-US">__rb_erase_color</SPAN></FONT>对应书中的<FONT FACE="SimSun, serif"><SPAN LANG="en-US">RB-DELETE-FIXUP</SPAN></FONT>，此处的实现和书上也基本上一致。</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">其余的几个接口就比较简单了。</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                rb_node *rb_first(struct rb_root *root);</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">在以<FONT FACE="SimSun, serif"><SPAN LANG="en-US">root</SPAN></FONT>为根的树中找出并返回最小的那个结点，只要从根结点一直向左走就是了。</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                rb_node *rb_last(struct rb_root *root);</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">是找出并返回最大的那个，一直向右走。</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                rb_node *rb_next(struct rb_node *node);</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">返回<FONT FACE="SimSun, serif"><SPAN LANG="en-US">node</SPAN></FONT>在树中的后继，这个稍微复杂一点。如果<FONT FACE="SimSun, serif"><SPAN LANG="en-US">node</SPAN></FONT>的右孩子不为空，它只要返回<FONT FACE="SimSun, serif"><SPAN LANG="en-US">node</SPAN></FONT>的右子树中最小的结点即可；如果为空，它要向上查找，找到迭带结点是其父亲的左孩子的结点，返回父结点。如果一直上述到了根结点，返回<FONT FACE="SimSun, serif"><SPAN LANG="en-US">NULL</SPAN></FONT>。</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                rb_node *rb_prev(struct rb_node *node);</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">返回<FONT FACE="SimSun, serif"><SPAN LANG="en-US">node</SPAN></FONT>的前驱，和<FONT FACE="SimSun, serif"><SPAN LANG="en-US">rb_next</SPAN></FONT>中的操作对称。</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">void
+                                rb_replace_node(struct rb_node *victim, struct rb_node *new, struct
+                                rb_root *root);</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">用<FONT FACE="SimSun, serif"><SPAN LANG="en-US">new</SPAN></FONT>替换以<FONT FACE="SimSun, serif"><SPAN LANG="en-US">root</SPAN></FONT>为根的树中的<FONT FACE="SimSun, serif"><SPAN LANG="en-US">victim</SPAN></FONT>结点。</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">红黑树接口使用的一个典型例子如下：</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">static
+                                inline struct page * rb_search_page_cache(struct inode * inode,</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                           
+                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">unsigned
+                                long offset)</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">{</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                rb_node * n = inode-&gt;i_rb_page_cache.rb_node;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                page * page;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">while
+                                (n)</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">{</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">page
+                                = rb_entry(n, struct page, rb_page_cache);</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">if
+                                (offset &lt; page-&gt;offset)</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">n
+                                = n-&gt;rb_left;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">else
+                                if (offset &gt; page-&gt;offset)</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">n
+                                = n-&gt;rb_right;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">else</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                       
+                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">return page;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">}</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">return
+                                NULL;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">}</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">static
+                                inline struct page * __rb_insert_page_cache(struct inode * inode,</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                           
+                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">unsigned
+                                long offset,</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                           
+                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                rb_node * node)</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">{</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                rb_node ** p = &amp;inode-&gt;i_rb_page_cache.rb_node;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                rb_node * parent = NULL;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                page * page;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">while
+                                (*p)</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">{</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">parent
+                                = *p;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">page
+                                = rb_entry(parent, struct page, rb_page_cache);</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">if
+                                (offset &lt; page-&gt;offset)</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">p
+                                = &amp;(*p)-&gt;rb_left;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">else
+                                if (offset &gt; page-&gt;offset)</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">p
+                                = &amp;(*p)-&gt;rb_right;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">else</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                       
+                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">return page;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">}</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">rb_link_node(node,
+                                parent, p);</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">return
+                                NULL;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">}</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">static
+                                inline struct page * rb_insert_page_cache(struct inode * inode,</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                           
+                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">unsigned
+                                long offset,</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                           
+                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                rb_node * node)</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">{</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">struct
+                                page * ret;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">if
+                                ((ret = __rb_insert_page_cache(inode, offset, node)))</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">goto
+                                out;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">       
+                <FONT FACE="SimSun, serif"><SPAN LANG="en-US">rb_insert_color(node,
+                                &amp;inode-&gt;i_rb_page_cache);</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"> <FONT FACE="SimSun, serif"><SPAN LANG="en-US">out:</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">        <FONT FACE="SimSun, serif"><SPAN LANG="en-US">return
+                                ret;</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">}</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm">   
+                因为红黑树的这些良好性质和实现中接口的简易性，它被广泛应用到内核编程中，大大提高了内核的效率。</P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><B>参考资料：</B></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><BR>
+                </P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">1.
+                                <I>Introduction to Algorithms</I>, Thomas H. Cormen, Charles E.
+                                Leiserson, and Ronald L. Rivest, MIT Press.</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">2.
+                                <I>Understanding the Linux Kernel, 3rd Edition</I>, Daniel P. Bovet,
+                                Marco Cesati, O'Reilly.</SPAN></FONT></P>
+                <P CLASS="cjk" STYLE="margin-bottom: 0cm"><FONT FACE="SimSun, serif"><SPAN LANG="en-US">3.
+                                Linux Kernel 2.6.19 source code.</SPAN></FONT></P>
+        </BODY>
+</HTML>
