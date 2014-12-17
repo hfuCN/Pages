@@ -4,21 +4,19 @@ layout: page
 ---
 
 a
->  永远是学生 | 一直在折腾 | 一条大软狗 | 努力成Coder
 
+> Minimalist | Appleist | *unixer | Coder
 
 who involved in 
-> [github](https://github.com/keaising)
 
-> [gitcafe](https://gitcafe.com/keaising)
-
+> [github](https://github.com/fuhu)
 
 mail 
-> keaising@gmail.com
 
+> askfuhu AT gmail DOT com
 
 or follow 
-> [@嵐山梓](https://twitter.com/#!/keaising)
 
+> [@askfuhu](https://twitter.com/#!/askfuhu)
 
 to reach me
