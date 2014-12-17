@@ -34,8 +34,6 @@ image:
 
 也希望她能......
 
-![平安快乐](http://mayitbe.net/images/posts/wish-you-a-happy-peace.jpg)
-
 对于你，只有此愿。
 
 **updated_at: 2013-07-24**
