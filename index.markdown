@@ -45,10 +45,10 @@ layout: default
   <div class="divider"></div>
   <ul class="listing main-listing">
     <li class="listing-seperator">Happend earlier this year</i>
-  {% capture month %}{{ site.time | date:"%m"}}{% endcapture %}
+  {% capture year %}{{ site.time | date:"%y"}}{% endcapture %}
   {% for post in site.posts offset:1 %}
-    {% capture m %}{{ post.date | date:"%m"}}{% endcapture %}
-    {% if month != m %}
+    {% capture y %}{{ post.date | date:"%y"}}{% endcapture %}
+    {% if year != y %}
     {% break %}
     {% endif %}
     <li class="listing-item">
