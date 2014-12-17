@@ -1,0 +1,25 @@
+---
+layout:     default
+title:      Articles by Lucian
+permalink:  /archive/
+section:    archive
+---
+
+<ul class="list archive">
+    {% for post in site.posts %}
+        {% capture month %}{{ post.date | date: '%Y' }}{% endcapture %}
+        {% capture nmonth %}{{ post.next.date | date: '%Y' }}{% endcapture %}
+        {% if month != nmonth %}
+            {% if forloop.index != 1 %}</li>{% endif %}
+            <li>
+            <h3 class="title">{{ post.date | date: '%Y' }}</h3>
+        {% endif %}
+        <p>
+            <b>{{ post.date | date: "%b" }}</b>
+            <i>{{ post.date | date: "%e" }}</i>
+            <a href="{{ post.url }}">{{ post.title }}</a>
+            {% if post.syntax %}<u title="Syntax">&ordf;</u>{% endif %}
+            {% if post.images %}<u title="Images">&ordm;</u>{% endif %}
+        </p>
+    {% endfor %}
+</ul>

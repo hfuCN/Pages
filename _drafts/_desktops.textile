@@ -1,0 +1,35 @@
+---
+layout: post
+date: "2011-02-21 03:26:12"
+edit: "2012-05-26 15:13:53"
+title: "Desktops"
+category: ""
+slug: "desktops"
+published: false
+---
+
+h3. Not the Great Pumpkin
+
+Based on the original photograph "Not the Great Pumpkin":http://www.avertedimagination.com/img_pages/not_the_great_pumpkin.html by Alan Friedman.
+
+p(wall). !/assets/desk/pumpkin.jpg(Not the Great Pumpkin)!:/downloads/desk-pumpkin.jpg
+
+h3. Loc de dat cu capul
+
+It means a place where you hit the wall with your head when things go wrong.
+
+p(wall). !/assets/desk/lddcc.png(Loc de dat cu capul)!:/downloads/desk-lddcc.png
+
+h3. Design Is
+
+"Design is…":http://www.flickr.com/groups/designerwallpaper/pool/with/247825677/ destiny in my hands, fate in your eyes.
+
+p(wall). !/assets/desk/designis.png(Design Is)!:/downloads/desk-designis.png
+
+h3. Love
+
+Coke, water, smoke, ashes, blood, everything but love. Also, available for "iPhone":/downloads/iphone-love.jpg.
+
+p(wall). !/assets/desk/love.jpg(Love)!:/downloads/desk-love.jpg
+
+If you enjoyed the wallpapers and also enjoy playing games online, I recommend "PlayVille.org":http://www.playville.org/ &mdash; the number one source for free online games.

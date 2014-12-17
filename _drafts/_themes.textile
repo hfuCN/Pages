@@ -1,0 +1,40 @@
+---
+layout:21
+date: "2011-02-21 03:11:52"
+edit: "2013-02-17 22:12:06"
+title: "Themes"
+category: ""
+slug: "themes"
+published: false
+---
+
+After you download the themes, you'll need to extract them to your _/wp-content/themes/_ directory. Then log into WP and activate the theme from within your presentation panel.
+
+The themes are licensed under a "GPL license":http://www.gnu.org/licenses/gpl.html. Basically, this means that you're free to do what you like with them as long as you redistribute them under the same license. I do have a small request: If you do use one of the theme, could you send <a href="http://lucianmarin.com/">a link back this way</a>? Of course, there is no obligation to do this other than professional courtesy but I would definitely appreciate the gesture. <notextile>:-)</notextile>
+
+p(work). The themes will always stay free, but donations are very much appreciated and will help continuing WordPress themes development and to provide support &mdash; <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YSKP3VFTQS4YL">donate via PayPal</a>. I like to design things like these, but it isn't an easy job as it seems.
+
+h4(ident). The Journalist 1.9
+
+The Journalist, or redefinition of minimalist, is a smart, sophisticated WordPress theme designed for professional journalists.
+
+Download it from "journalist.zip":/downloads/journalist.zip archive.
+
+p(work). !/assets/themes/journalist.jpg(The Journalist)!
+
+h4(ident). The Journalist 1.3
+
+This is  the classic version of The Journalist, the one that started the revolution of typography rich themes.
+
+Download it from "journalist_13.zip":/downloads/journalist_13.zip archive.
+
+p(work). !/assets/themes/journalist-13.jpg(The Journalist 1.3)!
+
+h4(ident). Andrea 0.3
+
+Andrea is modern theme standing out from the cloud with its shades of blue, varying from deep blue to whites.
+
+Download it from "andrea.zip":/downloads/andrea.zip archive.
+
+p(work). !/assets/themes/andrea.jpg(Andrea)!
+

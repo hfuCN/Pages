@@ -1,0 +1,13 @@
+name: Hu Fu
+description: Product Designer at Sublevel.net
+url: http://mayitbe.net
+
+#pygments: false
+permalink: /archive/:title.html
+
+markdown: redcarpet
+
+relative_permalinks: false
+
+exclude: [readme.md]
+include: [.htaccess]

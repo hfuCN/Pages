@@ -1,0 +1,367 @@
+@mixin type
+    font: 15px/20px "Helvetica Neue", "Roboto", "Segoe UI", "Open Sans", "Ubuntu", Helvetica, Arial, sans-serif
+
+@mixin mono
+    font: 12px/20px "Menlo", "Consolas", "DejaVu Sans Mono", "Droid Sans Mono", "Monospace", "Lucida Console", monospace
+
+@mixin small
+    font-size: 13px
+
+@mixin caps
+    font-size: 11px
+    text-transform: uppercase
+
+$text: #000
+$back: #f0f0f0
+$highlight: #ddd
+
+$dark: #404040 // 25
+$gray: #808080 // 50
+$silver: #c0c0c0 // 75
+
+$line: #d2d2d2
+$link: #30c0c0
+$over: #205080
+
+$d: 0.333s
+$radius: 3px
+
+*
+    margin: 0
+    padding: 0
+
+body
+    @include type
+    background-color: white
+    color: $text
+    text-rendering: optimizeLegibility
+
+a
+    color: $text
+    text-decoration: none
+    transition: color $d
+    img
+        border: 0 none
+
+ul
+    list-style: none
+
+ol
+    list-style-position: inside
+
+sup
+    line-height: 0
+
+b, i, u
+    font-style: normal
+    font-weight: normal
+    text-decoration: none
+
+img
+    display: block
+
+h2
+    font-weight: normal
+    font-size: 25px
+    line-height: 30px
+    letter-spacing: -1px
+    margin: 15px 0
+    a
+        transition: color 1.0s
+        &:hover
+            color: $silver
+
+h3
+    font-weight: normal
+    font-size: 20px
+    sup
+        @include small
+        color: $silver
+    a
+        color: $text
+        &:hover
+            color: $gray
+
+hr
+    margin: 5px 0
+    border: 0 none
+    border-bottom: $line 1px solid
+
+.content
+    width: 576px
+    margin: 0 auto
+
+.main
+    padding: 5px
+    background-color: $back
+
+.footer
+    @include small
+    background-color: #fff
+    padding: 13px 0
+    text-align: right
+    color: $gray
+    //margin-bottom: 50px
+    //box-shadow: 0 2px 2px #000
+    a:hover
+        color: $gray
+    hr
+        margin-left: 50%
+        margin-top: 1px
+        margin-bottom: 2px
+        border-bottom: $back 1px solid
+
+.menu
+    background-color: #fff
+    line-height: 40px
+    padding: 15px 0
+    overflow: hidden
+    //margin-top: 50px
+    //box-shadow: 0 -2px 2px #000
+    //.index
+        background-color: white
+        border: black 1px solid
+        width: 32px
+        height: 32px
+        display: block
+        position: relative
+        border-radius: $radius
+        .h, .v
+            background-color: black
+            position: absolute
+        .v
+            width: 4px
+            height: 16px
+            top: 8px
+            left: 14px
+        .h
+            width: 16px
+            height: 4px
+            top: 14px
+            left: 8px
+    img
+        border-radius: $radius
+    ul
+        display: block
+        li
+            display: block
+            float: left
+            margin-right: 15px
+            &:last-child
+                margin-right: 0px
+            i
+                color: $link
+            a
+                padding: 10px 0
+                color: $text
+                &:hover
+                    color: $gray
+            &.selected a
+                color: $silver
+
+.list
+    padding: 10px 0
+    li
+        padding: 10px 0
+    p a
+        color: $link
+        &:hover
+            color: $over
+    hr
+        margin-right: 50%
+    .day
+        font-size: 11px
+        color: $silver
+        text-transform: uppercase
+        border-bottom: $line 1px solid
+        width: 50%
+        position: relative
+        height: 10px
+        margin-top: 3px
+        margin-bottom: 11px
+        span
+            background-color: $back
+            padding-right: 5px
+            position: absolute
+    .grid
+        hr
+            margin-top: 8px
+            margin-bottom: 11px
+        img
+            &:first-child
+                border-top-left-radius: $radius
+                border-bottom-left-radius: $radius
+            &:last-child
+                border-top-right-radius: $radius
+                border-bottom-right-radius: $radius
+    &.archive
+        h3
+            padding-bottom: 5px
+        p
+            padding-top: 5px
+        b, i
+            display: block
+            float: left
+            width: 30px
+            color: $gray
+        i
+            text-align: right
+            margin-right: 15px
+            color: $silver
+            width: 25px
+        u
+            color: $silver
+            cursor: help
+    &.work
+        h3
+            padding-bottom: 1px
+        p
+            padding-top: 5px
+
+.post
+    padding: 1px 0
+    small
+        @include small
+        color: $gray
+    a
+        color: $link
+        &:hover
+            color: $over
+    p, .highlight
+        margin: 20px 0
+    p strong img
+        width: 100%
+        height: auto
+        border-radius: $radius
+    table
+        margin-top: -5px
+        margin-bottom: 15px
+        td
+            vertical-align: top
+            padding: 5px 0
+            border-bottom: $line 1px solid
+            &.y
+                padding-right: 15px
+                color: $silver
+                b
+                    color: $gray
+        tr:last-child td
+            border-bottom: 0 none
+    hr
+        margin: 6px 0 3px 0
+        margin-right: 50%
+    ul, ol
+        margin: 15px 0
+    li
+        padding: 5px 0
+        padding-left: 55px
+        border-bottom: $line 1px solid
+        &:last-child
+            border-bottom: 0 none
+    blockquote
+        margin-left: 5%
+        padding-left: 5%
+        border-left: $line 1px solid
+        color: $gray
+    pre
+        white-space: pre-wrap
+    code
+        @include mono
+        color: $gray
+    .contact
+        margin-bottom: 24px
+    .highlight
+        background-color: #fff
+        padding: 10px 5%
+        border-radius: $radius
+        border: $highlight 1px solid
+
+.quote
+    color: $gray
+    i
+        color: $silver
+
+.project
+    color: $gray
+    sup
+        color: $silver
+    img
+        float: left
+        padding: 2px
+        padding-left: 0
+        padding-right: 8px
+
+.grid
+    overflow: hidden
+    img
+        width: 33.333%
+        height: auto
+        float: left
+
+.details
+    @include small
+    margin-bottom: 15px
+    hr
+        width: 50%
+        margin-bottom: 15px
+    p
+        margin: 5px 0
+    b
+        width: 75px
+        float: left
+        display: block
+        color: $gray
+    a
+        color: $link
+        &:hover
+            color: $over
+
+.meta
+    @include small
+    color: $gray
+    margin-bottom: 20px
+    .topic
+        text-transform: capitalize
+    .caption
+        margin: 20px 0
+
+.buttons
+    height: 32px
+    overflow: hidden
+    li
+        display: block
+        float: left
+        margin-right: 20px
+    a
+        background-color: #fff
+        display: block
+        line-height: 30px
+        float: left
+        color: $gray
+        padding: 0 10px
+        border: $silver 1px solid
+        text-decoration: none
+        border-radius: $radius + 1px
+        transition: border-color $d, color $d
+        &:hover
+            border-color: $gray
+            color: $text
+        sup
+            font-size: 11px
+            color: $silver
+
+.handle:after
+    content: " at "
+    color: $silver
+
+.domain:after
+    content: " dot "
+    color: $silver
+
+html
+    -webkit-text-size-adjust: 100%
+    -ms-text-size-adjust: 100%
+
+@media (max-width: 640px)
+    .content
+        width: 90%

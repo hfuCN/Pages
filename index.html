@@ -1,46 +1,19 @@
-<!DOCTYPE html>
-<html xmlns=http://www.w3.org/1999/xhtml>
-<head>
-<style >
-@charset "utf-8";
+---
+layout:     default
+title:      Mayitbe
+section:    index
+---
 
-html,body{margin:0; padding:0; height:100%;}
+<ul class="list front">
+{% for post in site.posts limit:8 %}
+    <li>
+        <h3 class="title"><a href="{{ post.url }}">{{ post.title }}</a></h3>
+        <div class="day"><span>{{ post.date | date: "%A %b %e" }}</span></div>
+        {% assign lines = post.content | split: '</p>' %}{{ lines[0] }}</p>
+    </li>
+{% endfor %}
+</ul>
 
-#horizontal-line{border-top:1px solid #eee; position:absolute; top:38.2%; left:0; width:100%;}
-#vertical-line{border-left:1px solid #eee; position:absolute; top:0; left:50%; height:100%;}
-    #horizontal-line span,#vertical-line span{border:0; background:#eee none; color:#666; text-shadow:1px 1px #fff; padding:0 8px;}
-
-#bio-sign-shadow{position:absolute; left:50%; top:38.2%; margin:-46px 0 0 -146px; width:300px; height:100px; background:#cfcfcf none; -moz-border-radius:4px; -khtml-border-radius:4px; -webkit-border-radius:4px; border-radius:4px;}
-
-.bio-sign{margin:-50px 0 0 -150px; padding:2px; font-family:'Courier New','SimSun','宋体'; font-size:14px; line-height:150%; width:500px; background:#e6e6e6 none; -moz-border-radius:4px; -khtml-border-radius:4px; -webkit-border-radius:4px; border-radius:4px; position:absolute; top:38.2%; left:50%;}
-.bio-sign:hover,.bio-sign:focus{background-color:#f60;}
-.bio-sign:hover dl dt{background-color:#fff;}
-</style>
-
-<meta name="generator" content="vim" />
-<meta name="author" content="Hu Fu (askfuhu@gmail.com)" />
-<meta name="description" content="To be a better man" />
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
-<title>May it be - To be a better man</title>
-</head>
-
-<body>
-<div id="horizontal-line"><span>0.618</span></div>
-<div id="vertical-line"><span>1:1</span></div>
-
-<div class="bio-sign">
-                All good things must come to an end.<br />
-                Toutes les bonnes choses ont une fin.<br />
-                Alle guten Dinge müssen zu einem Ende kommen.<br />
-                Tutte le cose buone devono finire.<br />
-                Todas las cosas buenas deben llegar a su fin.<br />
-                Oportet omnes ad bonum finem.<br />
-                Όλα τα καλά πράγματα πρέπει να έρθουν σε ένα τέλος.<br />
-                ghob'e' lughoS Hoch Dolmey QaQ van.<br />
-                最是人間留不住，朱顏辭鏡花辭樹。<br />
-                最是人间留不住，朱颜辞镜花辞树。<br />
-                そのもっとも人間は居残ることができない、朱颜辞鏡花は辞木がある。<br />
-                대부분의 거울에 지구, 이마 사임 연설 나무 꽃을 유지 할 수 없습니다。</div>
-</body>
-</html>
+{% comment %}
+    <small>{{ post.date | date: "%b %e" }}</small>
+{% endcomment %}
