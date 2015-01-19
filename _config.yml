@@ -1,12 +1,12 @@
 markdown: rdiscount
 highlighter: true
 permalink: /:year/:month/:day/:title.html
-name: "寂兮寥兮"
+name: "Hu Fu"
 markdown: redcarpet
 #markdown: rdiscount
 
 author: "Hu FU"
-atom-baseurl: "http://mayitbe.net"
+atom-baseurl: "http://fuhu.github.io"
 disqus: "mayitbe"
 
 navigations:
