@@ -5,8 +5,8 @@ name: "Hu Fu"
 markdown: redcarpet
 #markdown: rdiscount
 
-author: "Hu FU"
-atom-baseurl: "http://fuhu.github.io"
+author: "Hu Fu"
+atom-baseurl: "http://typedef.io"
 disqus: "mayitbe"
 
 navigations:
