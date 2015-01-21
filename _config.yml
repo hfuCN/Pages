@@ -5,8 +5,8 @@ name: "hfu"
 markdown: rdiscount
 
 author: "hfu"
-atom-baseurl: "http://fuhu.github.io"
-disqus: "mayitbe"
+atom-baseurl: "http://typedef.io"
+disqus: ""
 
 navigations:
   - title: Archive
