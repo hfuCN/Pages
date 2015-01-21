@@ -2,7 +2,6 @@ markdown: rdiscount
 highlighter: true
 permalink: /:year/:month/:day/:title.html
 name: "hfu"
-markdown: rdiscount
 
 author: "hfu"
 atom-baseurl: "http://d.mayitbe.net"
