@@ -3,8 +3,8 @@ title: linux c 开发之 gdb 调试
 layout: post
 guid: urn:uuid:c1c66589-9927-462e-9f6f-d5e145ba0927
 tags:
-  -linux
-  -c
+  - linux
+  - c
 ---
 编写代码过程中少不了调试。在 windows 下面，我们有 visual studio 工具。在 linux 下面呢，实际上除了 gdb 工具之外，你没有别的选择。
 
