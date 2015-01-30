@@ -2,6 +2,7 @@ markdown: rdiscount
 highlighter: true
 permalink: /:year/:month/:day/:title.html
 name: "typedef"
+markdown: rdiscount
 
 author: "hfu"
 atom-baseurl: "http://typedef.io"
