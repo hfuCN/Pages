@@ -5,17 +5,17 @@ layout: page
 
 a
 
-> Minimalist | Appleist | Unixer | Coder
+> Linuxer | Coder | Photographer
 
-who involved in 
+who involved in
 
 > [github](https://github.com/fuhu)
 
-mail 
+mail
 
 > askfuhu AT gmail DOT com
 
-or follow 
+or follow
 
 > [@askfuhu](https://twitter.com/#!/askfuhu)
 
