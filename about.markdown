@@ -5,7 +5,7 @@ layout: page
 
 a
 
-> Linuxer | Coder | Photographer
+> Linuxer | Coder | Photographer | Traveller
 
 who involved in
 
