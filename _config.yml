@@ -6,7 +6,7 @@ markdown: rdiscount
 
 author: "hfu"
 atom-baseurl: "http://typedef.io"
-disqus: ""
+disqus: "mayitbe"
 
 navigations:
   - title: Archive
@@ -21,9 +21,6 @@ navigations:
   - title: Gallery
     class: fa fa-film
     href: http://mayitbe.net
-  - title: Blogroll
-    class: fa fa-link
-    href: /links.html
   - title: Subscribe
     class: fa fa-rss
     href: /atom.xml
