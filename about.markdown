@@ -17,6 +17,8 @@ mail
 
 or follow
 
-> [@askfuhu](https://twitter.com/#!/askfuhu)
+> [@askfuhu](https://twitter.com/#!/askfuhu) |  [fuhu](http://about.me/fuhu)
 
 to reach me
+
+
