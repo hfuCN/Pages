@@ -12,4 +12,4 @@ tags:
 
 为了写起来方便点，我就全部采用我的中文来编写了。如果有人开 issue 话，我会考虑把这些资料翻译成英语。
 
-For simple writeage, all the posts will be written in Chinese. If there are someone post a issue, I will consider translate it to English. LOL.
+For simple writeage, all the posts will be written in Chinese. If there are someone post an issue, I will consider translate it to English. LOL.
