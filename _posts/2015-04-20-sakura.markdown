@@ -6,6 +6,6 @@ tags:
   - photography
 ---
 
-[![](https://dn-mayitbe.qbox.me/mayitbe_sakura.jpg)]
+![](https://dn-mayitbe.qbox.me/mayitbe_sakura.jpg)
 
 骑了327公里。
