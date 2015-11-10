@@ -5,11 +5,11 @@ layout: page
 
 a
 
-> Linuxer | Coder | Photographer | Traveller
+> Programmer | Photographer | Traveller
 
 who involved in
 
-> [github](https://github.com/fuhu)
+> [github](https://github.com/hfuCN?tab=contributions&period=monthly)
 
 mail
 
@@ -17,7 +17,7 @@ mail
 
 or follow
 
-> [@askfuhu](https://twitter.com/#!/askfuhu) |  [fuhu](http://about.me/fuhu)
+> [@hfu_cn](https://twitter.com/hfu_cn |  [fuhu](http://about.me/fuhu)
 
 to reach me
 
