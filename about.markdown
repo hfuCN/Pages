@@ -17,7 +17,7 @@ mail
 
 or follow
 
-> [@hfu_cn](https://twitter.com/hfu_cn |  [fuhu](http://about.me/fuhu)
+> [@hfuCN](https://twitter.com/hfucn |  [fuhu](http://about.me/hfucn)
 
 to reach me
 
