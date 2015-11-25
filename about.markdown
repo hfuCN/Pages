@@ -9,7 +9,7 @@ a
 
 who involved in
 
-> [github](https://github.com/hfuCN?tab=contributions&period=monthly)
+> github: [github](https://github.com/hfuCN?tab=contributions&period=monthly)
 
 mail
 
@@ -17,7 +17,7 @@ mail
 
 or follow
 
-> [@hfu_cn](https://twitter.com/hfu_cn |  [fuhu](http://about.me/hfucn)
+> twitter: [@hfu_cn](https://twitter.com/hfu_cn) | about: [fuhu](http://about.me/hfucn)
 
 to reach me
 
