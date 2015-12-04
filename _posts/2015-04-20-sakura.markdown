@@ -1,0 +1,11 @@
+---
+title: sakura
+layout: post
+guid: urn:uuid:9bcdab67-180e-4841-8828-d02a165ff686
+tags:
+  - photography
+---
+
+![](https://dn-mayitbe.qbox.me/mayitbe_sakura.jpg)
+
+骑了327公里。
