@@ -1,9 +1,0 @@
----
-title: work-done
-layout: post
-guid: urn:uuid:616b1d1c-64fb-47fc-aaa2-537a7a5eb12c
-tags:
-  - life
----
-
-work done.

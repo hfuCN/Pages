@@ -1,9 +1,0 @@
----
-title: untitle
-layout: post
-guid: urn:uuid:25b29d0d-9256-49e5-b399-0ff7a26e3c86
-tags:
-  - photography
----
-
-取名字真是麻烦
