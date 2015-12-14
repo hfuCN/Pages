@@ -9,7 +9,7 @@ a
 
 who involved in
 
-> github: [github](https://github.com/hfuCN?tab=contributions&period=monthly)
+> github: [hfuCN](https://github.com/hfuCN?tab=contributions&period=monthly)
 
 mail
 
