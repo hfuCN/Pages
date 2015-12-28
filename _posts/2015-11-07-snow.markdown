@@ -1,0 +1,10 @@
+---
+title: snow
+layout: post
+guid: urn:uuid:a11f2109-d6e5-407b-b8e2-000aaf334de3
+tags:
+  - photography
+---
+
+一叶知秋凉
+![](http://7qn7v7.com1.z0.glb.clouddn.com/chuxue_01.jpg)
