@@ -5,7 +5,7 @@ name: "All is well"
 markdown: rdiscount
 
 author: "hfu"
-atom-baseurl: "http://fuhu.me"
+atom-baseurl: "http://hfu.io"
 disqus: "mayitbe"
 
 navigations:
