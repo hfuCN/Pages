@@ -1,0 +1,11 @@
+---
+title: road
+layout: post
+guid: urn:uuid:edd62fbe-bea7-4218-bc9c-21ce383b97d5
+tags:
+  - photography
+  - travel
+  - life
+---
+
+![](http://7xpc17.com1.z0.glb.clouddn.com/hfu.io/2016-02-07-road-IMG_1578.jpg)
