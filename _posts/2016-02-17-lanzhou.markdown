@@ -1,0 +1,12 @@
+---
+title: lanzhou
+layout: post
+guid: urn:uuid:0a85d66f-4175-419d-9cf8-6631b30b6824
+tags:
+  - photography
+  - life
+  - china
+  - travel
+---
+
+![](_posts/2016-02-17-lanzhou.markdown)
