@@ -5,7 +5,7 @@ layout: page
 
 a
 
-> Programmer | Photographer | Traveller
+> Programmer || Photographer || Traveller
 
 who involved in
 
@@ -13,12 +13,11 @@ who involved in
 
 mail
 
-> askfuhu AT gmail DOT com
+> echo exsnyqydpvertbjwv | tr yxwvtsrqpnjedb usomlkihgfca@.
 
 or follow
 
 > twitter: [@hfu_cn](https://twitter.com/hfu_cn)
 
 to reach me.
-
 
