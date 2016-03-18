@@ -1,8 +1,8 @@
 highlighter: rouge
 permalink: /:year/:month/:day/:title.html
 name: "All is well"
-# markdown: rdiscount
-markdown: kramdown
+markdown: rdiscount
+#markdown: kramdown
 
 author: "hfu"
 atom-baseurl: "http://hfu.io"
