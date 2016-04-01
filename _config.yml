@@ -1,6 +1,6 @@
 highlighter: rouge
 permalink: /:year/:month/:day/:title.html
-name: "All is well"
+name: "Hu Fu"
 markdown: rdiscount
 #markdown: kramdown
 
