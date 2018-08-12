@@ -1,6 +1,6 @@
 highlighter: rouge
 permalink: /:year/:month/:day/:title.html
-name: "Hu Fu"
+name: "薛定谔の喵"
 markdown: rdiscount
 #markdown: kramdown
 
