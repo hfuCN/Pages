@@ -5,8 +5,8 @@ markdown: rdiscount
 #markdown: kramdown
 
 author: "hfu"
-atom-baseurl: "http://hfu.io"
-disqus: "mayitbe"
+atom-baseurl: "http://fuhu.me"
+#disqus: "mayitbe"
 
 navigations:
   - title: Archive
